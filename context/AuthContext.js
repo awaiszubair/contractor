@@ -1,66 +1,87 @@
-'use client';
+"use client";
 
-import { createContext, useState, useEffect, useContext } from 'react';
-import { useRouter } from 'next/navigation';
+import { createContext, useState, useEffect, useContext } from "react";
+import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [projects, setProjects] = useState([]);
 
-    useEffect(() => {
-        checkUserLoggedIn();
-    }, []);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-    const checkUserLoggedIn = async () => {
-        try {
-            const res = await fetch('/api/auth/me');
-            const data = await res.json();
-            if (res.ok && data.user) {
-                setUser(data.user);
-            } else {
-                setUser(null);
-            }
-        } catch (error) {
-            console.error('Auth check error', error);
-            setUser(null);
-        } finally {
-            setLoading(false);
-        }
-    };
+  useEffect(() => {
+    checkUserLoggedIn();
+  }, []);
 
-    const login = async (email, password) => {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-            setUser(data.user);
-            router.push('/dashboard'); // Standard redirect
-            return { success: true };
-        }
-        return { success: false, error: data.error };
-    };
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch("/api/projects");
+      const data = await res.json();
 
-    const logout = async () => {
-        // For now clear state, ideally verify implementation calls API to clear cookie
-        // Next.js app router doesn't have easy cookie clear from client without API
-        // Assuming we might add a logout API route later, but for now just redirect
-        // Use document.cookie to clear if possible or just refresh
-        document.cookie = 'token=; Max-Age=0; path=/;';
+      if (res.ok) {
+        setProjects(data.projects);
+      }
+    } catch (err) {
+      console.error("Fetch projects error", err);
+    }
+  };
+
+  const checkUserLoggedIn = async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      const data = await res.json();
+      if (res.ok && data.user) {
+        setUser(data.user);
+        await fetchProjects();
+      } else {
         setUser(null);
-        router.push('/login');
-    };
+      }
+    } catch (error) {
+      console.error("Auth check error", error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  const login = async (email, password) => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setUser(data.user);
+      router.push("/dashboard"); // Standard redirect
+      return { success: true };
+    }
+    return { success: false, error: data.error };
+  };
+
+  const logout = async () => {
+    try {
+      // Call the logout API to clear the httpOnly cookie
+      await fetch("/api/auth/logout", { method: "POST" });
+
+      setUser(null);
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still clear state and redirect even if API fails
+      setUser(null);
+      router.push("/login");
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading, projects }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);
