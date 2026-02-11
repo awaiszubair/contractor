@@ -1,8 +1,9 @@
 import dbConnect from "@/lib/db";
 import Project from "@/models/Project";
 import User from "@/models/User";
-import { verifyToken } from "@/lib/auth";
+import { verifyToken, signToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email";
 import { cookies } from "next/headers";
 
 // Helper to get user
@@ -53,6 +54,15 @@ export async function POST(req) {
           // For now, let's just creating them is enough to link.
           phone: phone,
         });
+        const inviteToken = signToken({ name, email, role: "client" });
+        const registrationLink = `${process.env.NEXT_PUBLIC_API_URL}/register?token=${inviteToken}`;
+        if (process.env.EMAIL_USER) {
+          await sendEmail({
+            to: email,
+            subject: "You have been invited to Contractor CMS",
+            html: `<p>Hello ${name || "User"},</p><p>You have been invited to join as Client.</p><p><a href="${registrationLink}">Click here to register</a></p>`,
+          });
+        }
       }
       clientId = existingUser._id;
     }

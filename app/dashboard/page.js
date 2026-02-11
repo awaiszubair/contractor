@@ -5,6 +5,7 @@ import DashboardNav from "@/components/DashboardNav";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ProjectStatusCards from "@/components/ProjectStatusCards";
+import ChangePassword from "@/components/ChangePassword";
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -290,6 +291,7 @@ export default function DashboardPage() {
               </Link>
             </div>
           )}
+          <ChangePassword />
         </div>
       </div>
     </div>

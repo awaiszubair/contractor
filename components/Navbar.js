@@ -51,9 +51,10 @@ export default function Navbar() {
             </button>
           </div>
         ) : (
-          <Link href="/login" className="text-sm font-semibold hover:underline">
-            Login
-          </Link>
+          " "
+          // <Link href="/login" className="text-sm font-semibold hover:underline">
+          //   Login
+          // </Link>
         )}
       </div>
 

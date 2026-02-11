@@ -16,6 +16,22 @@ export function AuthProvider({ children }) {
     checkUserLoggedIn();
   }, []);
 
+  const changePassword = async (currentPassword, newPassword) => {
+    const res = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to change password");
+    }
+
+    return data;
+  };
+
   const fetchProjects = async () => {
     try {
       const res = await fetch("/api/projects");
@@ -45,6 +61,22 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetPassword = async (token, newPassword) => {
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to reset password");
+    }
+
+    return data;
   };
 
   const login = async (email, password) => {
@@ -78,7 +110,17 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, projects }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        loading,
+        projects,
+        changePassword,
+        resetPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
