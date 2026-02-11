@@ -37,7 +37,7 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
+    if (formData.length < 6) {
       setError("New password must be at least 6 characters");
       return;
     }

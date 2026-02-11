@@ -16,7 +16,7 @@ export async function PATCH(req) {
   try {
     await connectDB();
     const user = await getUser();
-    if (!user || user.role !== "admin") {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

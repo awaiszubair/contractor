@@ -1,475 +1,303 @@
+// "use client";
+
+// import {
+//   useAuth,
+//   useSocket,
+//   DashboardNav,
+//   ChatSidebar,
+//   useChatSocket,
+//   useTyping,
+//   useVoiceRecording,
+//   ChatHeader,
+//   MessageList,
+//   ChatInput,
+//   ChatEmptyState,
+//   VoiceRecorder,
+// } from "./index";
+
+// import {
+//   useChatState,
+//   useChatEffects,
+//   useChatHandlers,
+// } from "@/hooks/useChatLogic";
+
+// export default function GlobalChatPage() {
+//   const { user, loading: authLoading } = useAuth();
+//   const { socket, isConnected } = useSocket();
+
+//   // State management
+//   const {
+//     projects,
+//     setProjects,
+//     filter,
+//     setFilter,
+//     selectedUser,
+//     setSelectedUser,
+//     messages,
+//     setMessages,
+//     input,
+//     setInput,
+//     isTyping,
+//     setIsTyping,
+//     messagesEndRef,
+//   } = useChatState();
+
+//   // Socket events, presence, read receipts
+//   const { onlineUsers, markMessagesAsRead, scrollToBottom } = useChatSocket({
+//     socket,
+//     isConnected,
+//     user,
+//     selectedUser,
+//     messages,
+//     setMessages,
+//     setIsTyping,
+//     messagesEndRef,
+//   });
+
+//   // Typing emit logic
+//   const { handleTyping, handleStopTyping } = useTyping({
+//     socket,
+//     user,
+//     selectedUser,
+//   });
+
+//   // Voice recording
+//   const {
+//     isRecording,
+//     recordingTime,
+//     startRecording,
+//     stopRecording,
+//     cancelRecording,
+//   } = useVoiceRecording({
+//     onRecordingComplete: (audioFile) => {
+//       uploadFile(audioFile, audioFile.name, "voice");
+//     },
+//   });
+
+//   // Message and project handlers
+//   const { fetchProjects, fetchMessages, sendMessage, uploadFile } =
+//     useChatHandlers({
+//       user,
+//       selectedUser,
+//       filter,
+//       socket,
+//       setProjects,
+//       setMessages,
+//       setInput,
+//       handleStopTyping,
+//       scrollToBottom,
+//     });
+
+//   // Effects for data fetching and lifecycle
+//   useChatEffects({
+//     user,
+//     selectedUser,
+//     filter,
+//     messages,
+//     fetchProjects,
+//     fetchMessages,
+//     setMessages,
+//     setIsTyping,
+//     markMessagesAsRead,
+//   });
+
+//   // Input handlers
+//   const handleInputChange = (e) => {
+//     setInput(e.target.value);
+//     handleTyping();
+//   };
+
+//   const handleFileUpload = (e) => {
+//     const file = e.target.files[0];
+//     if (file) uploadFile(file);
+//   };
+
+//   const handleMicClick = () => {
+//     if (isRecording) {
+//       stopRecording();
+//     } else {
+//       startRecording();
+//     }
+//   };
+
+//   // Loading and auth checks
+//   if (authLoading) return <div className="p-8">Loading...</div>;
+//   if (!user) return <div className="p-8">Access Denied</div>;
+
+//   const isSelectedUserOnline = selectedUser
+//     ? onlineUsers.has(selectedUser._id)
+//     : false;
+
+//   console.log("Selected user online status:", {
+//     selectedUserId: selectedUser?._id,
+//     isOnline: isSelectedUserOnline,
+//     allOnlineUsers: Array.from(onlineUsers),
+//   });
+
+//   return (
+//     <div className="max-w-7xl mx-auto">
+//       <DashboardNav role={user.role} />
+//       <div className="w-full flex flex-col h-[calc(100vh-100px)] md:flex-row bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+//         <ChatSidebar
+//           onSelectUser={setSelectedUser}
+//           selectedUser={selectedUser}
+//           projects={projects}
+//           onFilterChange={setFilter}
+//           currentFilter={filter}
+//         />
+
+//         <div className="flex-1 flex flex-col h-full bg-[#f0f2f5]">
+//           {selectedUser ? (
+//             <>
+//               <ChatHeader
+//                 selectedUser={selectedUser}
+//                 isOnline={isSelectedUserOnline}
+//                 isTyping={isTyping}
+//                 onBack={() => setSelectedUser(null)}
+//               />
+//               <MessageList
+//                 messages={messages}
+//                 currentUserId={user.id}
+//                 messagesEndRef={messagesEndRef}
+//               />
+//               <div className="relative">
+//                 <ChatInput
+//                   input={input}
+//                   onChange={handleInputChange}
+//                   onSend={sendMessage}
+//                   onStopTyping={handleStopTyping}
+//                   onFileChange={handleFileUpload}
+//                   onMicClick={handleMicClick}
+//                   isRecording={isRecording}
+//                 />
+//                 {isRecording && (
+//                   <VoiceRecorder
+//                     recordingTime={recordingTime}
+//                     onStop={stopRecording}
+//                     onCancel={cancelRecording}
+//                   />
+//                 )}
+//               </div>
+//             </>
+//           ) : (
+//             <ChatEmptyState />
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { useSocket } from "@/hooks/useSocket";
-import DashboardNav from "@/components/DashboardNav";
-import ChatSidebar from "@/components/ChatSidebar";
+import {
+  useEffect,
+  useState,
+  useRef,
+  useAuth,
+  useSocket,
+  DashboardNav,
+  ChatSidebar,
+  useChatSocket,
+  useTyping,
+  useVoiceRecording,
+  ChatHeader,
+  MessageList,
+  ChatInput,
+  ChatEmptyState,
+  VoiceRecorder,
+} from "./index";
+
+import {
+  useChatState,
+  useChatEffects,
+  useChatHandlers,
+} from "@/hooks/useChatLogic";
 
 export default function GlobalChatPage() {
   const { user, loading: authLoading } = useAuth();
-
-  const [projects, setProjects] = useState([]);
-  const [filter, setFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState(null);
-
   const { socket, isConnected } = useSocket();
 
-  // Chat State
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const messagesEndRef = useRef(null);
-  const processedReadRef = useRef(new Set());
+  // State management
+  const {
+    projects,
+    setProjects,
+    filter,
+    setFilter,
+    selectedUser,
+    setSelectedUser,
+    messages,
+    setMessages,
+    input,
+    setInput,
+    isTyping,
+    setIsTyping,
+    messagesEndRef,
+  } = useChatState();
 
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
+  // Socket events, presence, read receipts
+  const { onlineUsers, markMessagesAsRead, scrollToBottom } = useChatSocket({
+    socket,
+    isConnected,
+    user,
+    selectedUser,
+    messages,
+    setMessages,
+    setIsTyping,
+    messagesEndRef, // ← Pass the ref here
+  });
 
-  // Track online users
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  // Typing emit logic
+  const { handleTyping, handleStopTyping } = useTyping({
+    socket,
+    user,
+    selectedUser,
+  });
 
-  // Typing indicator state
-  const [isTyping, setIsTyping] = useState(false);
-  const typingTimeoutRef = useRef(null);
+  // Voice recording
+  const {
+    isRecording,
+    recordingTime,
+    startRecording,
+    stopRecording,
+    cancelRecording,
+  } = useVoiceRecording({
+    onRecordingComplete: (audioFile) => {
+      uploadFile(audioFile, audioFile.name, "voice");
+    },
+  });
 
-  useEffect(() => {
-    if (user) {
-      fetchProjects();
-    }
-  }, [user]);
-
-  // Join personal user room on connection
-  useEffect(() => {
-    if (socket && isConnected && user) {
-      socket.emit("join_personal_room", user.id);
-      console.log(`Joined personal room: user_${user.id}`);
-    }
-  }, [socket, isConnected, user]);
-
-  // Listen for user online/offline status
-  useEffect(() => {
-    if (socket && isConnected) {
-      // Receive initial list of online users
-      const handleOnlineUsersList = (userIds) => {
-        console.log("📋 Received online users list:", userIds);
-        setOnlineUsers(new Set(userIds));
-      };
-
-      const handleUserOnline = (userId) => {
-        console.log("👤 User came online:", userId);
-        setOnlineUsers((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(userId);
-          console.log("Current online users:", Array.from(newSet));
-          return newSet;
-        });
-      };
-
-      const handleUserOffline = (userId) => {
-        console.log("👤 User went offline:", userId);
-        setOnlineUsers((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(userId);
-          console.log("Current online users:", Array.from(newSet));
-          return newSet;
-        });
-      };
-
-      socket.on("online_users_list", handleOnlineUsersList);
-      socket.on("user_online", handleUserOnline);
-      socket.on("user_offline", handleUserOffline);
-
-      return () => {
-        socket.off("online_users_list", handleOnlineUsersList);
-        socket.off("user_online", handleUserOnline);
-        socket.off("user_offline", handleUserOffline);
-      };
-    }
-  }, [socket, isConnected]);
-
-  // Listen for typing indicator
-  useEffect(() => {
-    if (socket && isConnected && selectedUser && user) {
-      const handleUserTyping = ({ userId, receiverId }) => {
-        console.log("⌨️  User typing event:", userId, receiverId);
-
-        // Only show typing if the typing user is the selected user
-        // and they're typing to the current user
-        if (userId === selectedUser._id && receiverId === user.id) {
-          console.log("✅ Showing typing indicator");
-          setIsTyping(true);
-        }
-      };
-
-      const handleUserStoppedTyping = ({ userId, receiverId }) => {
-        console.log("⌨️  User stopped typing:", userId, receiverId);
-
-        if (userId === selectedUser._id && receiverId === user.id) {
-          console.log("✅ Hiding typing indicator");
-          setIsTyping(false);
-        }
-      };
-
-      socket.on("user_typing", handleUserTyping);
-      socket.on("user_stopped_typing", handleUserStoppedTyping);
-
-      return () => {
-        socket.off("user_typing", handleUserTyping);
-        socket.off("user_stopped_typing", handleUserStoppedTyping);
-      };
-    }
-  }, [socket, isConnected, selectedUser, user]);
-
-  // Listen for message status updates
-  useEffect(() => {
-    if (socket && isConnected) {
-      const handleMessageDelivered = ({ messageId }) => {
-        console.log("✅ Message delivered:", messageId);
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg._id === messageId ? { ...msg, status: "delivered" } : msg,
-          ),
-        );
-      };
-
-      const handleMessageRead = ({ messageId }) => {
-        console.log("👁️ Message read:", messageId);
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg._id === messageId ? { ...msg, status: "read" } : msg,
-          ),
-        );
-      };
-
-      socket.on("message_delivered", handleMessageDelivered);
-      socket.on("message_read", handleMessageRead);
-
-      return () => {
-        socket.off("message_delivered", handleMessageDelivered);
-        socket.off("message_read", handleMessageRead);
-      };
-    }
-  }, [socket, isConnected]);
-
-  // Reset typing indicator when changing users
-  useEffect(() => {
-    setIsTyping(false);
-  }, [selectedUser]);
-
-  // Clear processed read messages when switching chat user
-  useEffect(() => {
-    processedReadRef.current.clear();
-  }, [selectedUser]);
-
-  // Mark messages as read when opening a chat
-  useEffect(() => {
-    if (selectedUser && user && messages.length > 0) {
-      markMessagesAsRead();
-    }
-  }, [selectedUser]);
-
-  // Handle Socket Events & Room Joining for specific chat
-  useEffect(() => {
-    if (socket && isConnected && selectedUser && user) {
-      const ids = [user.id, selectedUser._id].sort();
-      const roomId = `chat_${ids[0]}_${ids[1]}`;
-
-      socket.emit("join_chat_room", roomId);
-      console.log(`Joined chat room: ${roomId}`);
-
-      const handleNewMessage = (msg) => {
-        console.log("📨 New message received:", msg);
-
-        // Extract IDs safely
-        const msgSenderId = msg.sender?._id || msg.sender;
-        const msgReceiverId = msg.receiver?._id || msg.receiver;
-        const selectedUserId = selectedUser._id;
-        const currentUserId = user.id;
-
-        console.log("Message details:", {
-          from: msgSenderId,
-          to: msgReceiverId,
-          selectedUser: selectedUserId,
-          currentUser: currentUserId,
-          content: msg.content,
-        });
-
-        // Check if message is part of current conversation
-        const isRelevantMessage =
-          (msgSenderId === selectedUserId && msgReceiverId === currentUserId) ||
-          (msgSenderId === currentUserId && msgReceiverId === selectedUserId);
-
-        if (isRelevantMessage) {
-          console.log("✅ Message is relevant, adding to UI");
-          setMessages((prev) => {
-            // Prevent duplicates
-            const exists = prev.find((m) => m._id === msg._id);
-            if (exists) {
-              console.log("⚠️  Duplicate message, skipping");
-              return prev;
-            }
-            return [...prev, msg];
-          });
-          scrollToBottom();
-
-          // Hide typing indicator when message is received
-          setIsTyping(false);
-
-          // If message is from the other user, emit delivered status
-          if (msgSenderId === selectedUserId) {
-            console.log("🔔 New message came - ting tone");
-            // Add your notification sound here
-
-            // Emit delivered status
-            if (socket && msg._id) {
-              socket.emit("message_delivered", {
-                messageId: msg._id,
-                senderId: msgSenderId,
-              });
-              console.log("📬 Emitted delivered status for:", msg._id);
-            }
-
-            // Auto mark as read since chat is open
-            setTimeout(() => {
-              markMessageAsRead(msg._id, msgSenderId);
-            }, 500);
-          }
-        } else {
-          console.log("❌ Message not relevant to current chat, ignoring");
-        }
-      };
-
-      socket.on("new_message", handleNewMessage);
-
-      return () => {
-        console.log("Cleaning up new_message listener");
-        socket.off("new_message", handleNewMessage);
-      };
-    }
-  }, [socket, isConnected, selectedUser, user]);
-
-  // Fetch Messages when User Selected
-  useEffect(() => {
-    if (selectedUser && user) {
-      fetchMessages();
-    } else {
-      setMessages([]);
-    }
-  }, [selectedUser, filter]);
-
-  const fetchProjects = async () => {
-    try {
-      const res = await fetch("/api/projects");
-      const data = await res.json();
-      if (res.ok) setProjects(data.projects || []);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const fetchMessages = async () => {
-    try {
-      console.log(
-        "[fetchMessages] Starting fetch for:",
-        selectedUser.name,
-        selectedUser._id,
-      );
-      let query = `?receiverId=${selectedUser._id}`;
-
-      const activeProjectId =
-        filter !== "all"
-          ? filter
-          : selectedUser.projects?.[0] || projects[0]?._id;
-
-      if (filter !== "all") {
-        query += `&projectId=${filter}`;
-      }
-
-      console.log("[fetchMessages] Query:", query);
-      const res = await fetch(`/api/messages${query}`);
-      const data = await res.json();
-      console.log(
-        "[fetchMessages] Response:",
-        data.messages?.length,
-        "messages",
-      );
-      if (res.ok) setMessages(data.messages || []);
-      scrollToBottom();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const markMessagesAsRead = async () => {
-    if (!selectedUser || !user) return;
-
-    // Find unread messages from the selected user
-    const unreadMessages = messages.filter((msg) => {
-      const msgSenderId = msg.sender?._id || msg.sender;
-      return msgSenderId === selectedUser._id && msg.status !== "read";
+  // Message and project handlers
+  const { fetchProjects, fetchMessages, sendMessage, uploadFile } =
+    useChatHandlers({
+      user,
+      selectedUser,
+      filter,
+      socket,
+      setProjects,
+      setMessages,
+      setInput,
+      handleStopTyping,
+      scrollToBottom,
     });
 
-    if (unreadMessages.length === 0) return;
+  // Effects for data fetching and lifecycle
+  useChatEffects({
+    user,
+    selectedUser,
+    filter,
+    messages,
+    fetchProjects,
+    fetchMessages,
+    setMessages,
+    setIsTyping,
+    markMessagesAsRead,
+  });
 
-    console.log("📖 Marking messages as read:", unreadMessages.length);
-
-    for (const msg of unreadMessages) {
-      await markMessageAsRead(msg._id, selectedUser._id);
-    }
-  };
-
-  const markMessageAsRead = async (messageId, senderId) => {
-    if (!messageId) return;
-
-    if (processedReadRef.current.has(messageId)) return;
-    processedReadRef.current.add(messageId);
-
-    try {
-      const res = await fetch("/api/messages/read", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messageId }),
-      });
-
-      if (res.ok) {
-        // Update UI immediately
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg._id === messageId ? { ...msg, status: "read" } : msg,
-          ),
-        );
-
-        // Notify sender if online
-        if (socket) {
-          socket.emit("message_read", { messageId });
-        }
-      } else {
-        processedReadRef.current.delete(messageId);
-      }
-    } catch (err) {
-      console.error(err);
-      processedReadRef.current.delete(messageId);
-    }
-  };
-
-  const sendMessage = async (content, type = "text", attachments = []) => {
-    console.log("Send Message Button clicked");
-    if (!content && attachments.length === 0) return;
-    if (!selectedUser) return;
-
-    console.log("Project determination logic starting. Filter:", filter);
-
-    // Determine Project ID to tag
-    const activeProjectId =
-      filter !== "all" ? filter : selectedUser.projects?.[0];
-    if (!activeProjectId) {
-      alert("No common project found context for this chat.");
-      return;
-    }
-
-    // Stop typing indicator when sending
-    handleStopTyping();
-
-    try {
-      const res = await fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectId: activeProjectId,
-          receiverId: selectedUser._id,
-          content,
-          type,
-          attachments,
-          status: "sent", // Initial status
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        const newMsg = data.message;
-        console.log("[sendMessage] Message saved, adding to UI:", newMsg);
-        setMessages((prev) => [...prev, newMsg]);
-        setInput("");
-        scrollToBottom();
-
-        // Emit via Socket
-        if (socket) {
-          console.log("Now entered into socket");
-
-          if (!socket.connected) {
-            console.error("❌ Socket not connected, cannot send message");
-            return;
-          }
-
-          console.log("✅ Socket is connected, emitting message");
-
-          const ids = [user.id, selectedUser._id].sort();
-          const roomId = `chat_${ids[0]}_${ids[1]}`;
-
-          console.log("Emitting private_message:", {
-            roomId,
-            receiver: selectedUser._id,
-            content: newMsg.content,
-          });
-
-          socket.emit("private_message", {
-            ...newMsg,
-            roomId,
-            receiver: selectedUser._id,
-          });
-
-          console.log("✅ Message emitted successfully");
-        } else {
-          console.warn("⚠️  Socket not available");
-        }
-      }
-    } catch (e) {
-      console.error("Error sending message:", e);
-    }
-  };
-
+  // Input handlers
   const handleInputChange = (e) => {
     setInput(e.target.value);
     handleTyping();
-  };
-
-  const handleTyping = () => {
-    if (!socket || !selectedUser || !user) return;
-
-    // Emit typing event
-    socket.emit("typing", {
-      userId: user.id,
-      receiverId: selectedUser._id,
-    });
-
-    // Clear existing timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    // Set new timeout to stop typing after 2 seconds of inactivity
-    typingTimeoutRef.current = setTimeout(() => {
-      handleStopTyping();
-    }, 2000);
-  };
-
-  const handleStopTyping = () => {
-    if (!socket || !selectedUser || !user) return;
-
-    socket.emit("stop_typing", {
-      userId: user.id,
-      receiverId: selectedUser._id,
-    });
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
-    }
-  };
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
   };
 
   const handleFileUpload = (e) => {
@@ -477,91 +305,18 @@ export default function GlobalChatPage() {
     if (file) uploadFile(file);
   };
 
-  const uploadFile = async (file, name, type = "file") => {
-    const formData = new FormData();
-    formData.append("file", file, name || file.name);
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (res.ok) await sendMessage(null, type, [data.url]);
-    } catch (e) {
-      console.error("Upload error:", e);
-    }
-  };
-
-  // Render message status ticks
-  const renderMessageTicks = (message) => {
-    const msgSenderId = message.sender?._id || message.sender;
-    const isMe = msgSenderId === user.id;
-
-    // Only show ticks for messages sent by current user
-    if (!isMe) return null;
-
-    const status = message.status || "sent";
-
-    if (status === "read") {
-      // Blue double tick
-      return (
-        <span className="inline-flex ml-1">
-          <svg
-            className="w-4 h-4 text-blue-500"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-          >
-            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
-          </svg>
-          <svg
-            className="w-4 h-4 text-blue-500 -ml-2"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-          >
-            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
-          </svg>
-        </span>
-      );
-    } else if (status === "delivered") {
-      // Gray double tick
-      return (
-        <span className="inline-flex ml-1">
-          <svg
-            className="w-4 h-4 text-gray-400"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-          >
-            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
-          </svg>
-          <svg
-            className="w-4 h-4 text-gray-400 -ml-2"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-          >
-            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
-          </svg>
-        </span>
-      );
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
     } else {
-      // Single gray tick (sent)
-      return (
-        <span className="inline-flex ml-1">
-          <svg
-            className="w-4 h-4 text-gray-400"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-          >
-            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
-          </svg>
-        </span>
-      );
+      startRecording();
     }
   };
 
+  // Loading and auth checks
   if (authLoading) return <div className="p-8">Loading...</div>;
   if (!user) return <div className="p-8">Access Denied</div>;
 
-  // Check if selected user is online
   const isSelectedUserOnline = selectedUser
     ? onlineUsers.has(selectedUser._id)
     : false;
@@ -575,8 +330,7 @@ export default function GlobalChatPage() {
   return (
     <div className="max-w-7xl mx-auto">
       <DashboardNav role={user.role} />
-      <div className="w-full flex flex-col  h-[calc(100vh-100px)]  md:flex-row bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-        {/* Sidebar */}
+      <div className="w-full flex flex-col h-[calc(100vh-100px)] md:flex-row bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
         <ChatSidebar
           onSelectUser={setSelectedUser}
           selectedUser={selectedUser}
@@ -585,134 +339,41 @@ export default function GlobalChatPage() {
           currentFilter={filter}
         />
 
-        {/* Chat Window */}
         <div className="flex-1 flex flex-col h-full bg-[#f0f2f5]">
           {selectedUser ? (
             <>
-              {/* Header */}
-              <div className="p-4 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm z-10">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
-                      {selectedUser.avatar ? (
-                        <img
-                          src={selectedUser.avatar}
-                          className="w-full h-full"
-                        />
-                      ) : (
-                        selectedUser.name[0]
-                      )}
-                    </div>
-                    {/* Online indicator dot */}
-                    {isSelectedUserOnline && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="font-bold">{selectedUser.name}</h2>
-                    <p
-                      className={`text-xs ${
-                        isTyping
-                          ? "text-blue-600"
-                          : isSelectedUserOnline
-                            ? "text-green-600"
-                            : "text-gray-500"
-                      }`}
-                    >
-                      {isTyping
-                        ? "typing..."
-                        : isSelectedUserOnline
-                          ? "Online"
-                          : "Offline"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2 text-gray-500">
-                  <button
-                    onClick={() => setSelectedUser(null)}
-                    className="md:hidden"
-                  >
-                    Back
-                  </button>
-                </div>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[url('/bg-chat.png')] bg-repeat bg-contain bg-opacity-10">
-                {messages.map((msg, idx) => {
-                  const isMe =
-                    msg.sender._id === user.id || msg.sender === user.id;
-                  return (
-                    <div
-                      key={idx}
-                      className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[70%] p-3 rounded-lg shadow-sm text-sm 
-                                         ${isMe ? "bg-[#d9fdd3]" : "bg-white"}`}
-                      >
-                        {msg.content && <div>{msg.content}</div>}
-                        {msg.type === "file" && msg.attachments?.length > 0 && (
-                          <a
-                            href={msg.attachments[0]}
-                            target="_blank"
-                            className="block mt-1 text-blue-600"
-                          >
-                            📎 Attachment
-                          </a>
-                        )}
-
-                        <span className="block text-[10px] text-gray-500 text-right mt-1 flex items-center justify-end gap-1">
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                          {renderMessageTicks(msg)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input */}
-              <div className="p-3 bg-gray-100 flex items-center gap-3">
-                <label className="cursor-pointer p-2 hover:bg-gray-200 rounded-full">
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                  />
-                  📎
-                </label>
-                <input
-                  type="text"
-                  value={input}
+              <ChatHeader
+                selectedUser={selectedUser}
+                isOnline={isSelectedUserOnline}
+                isTyping={isTyping}
+                onBack={() => setSelectedUser(null)}
+              />
+              <MessageList
+                messages={messages}
+                currentUserId={user.id}
+                messagesEndRef={messagesEndRef}
+              />
+              <div className="relative">
+                <ChatInput
+                  input={input}
                   onChange={handleInputChange}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-                  onBlur={handleStopTyping}
-                  placeholder="Type a message"
-                  className="flex-1 px-4 py-2 rounded-full border border-white focus:outline-none"
+                  onSend={sendMessage}
+                  onStopTyping={handleStopTyping}
+                  onFileChange={handleFileUpload}
+                  onMicClick={handleMicClick}
+                  isRecording={isRecording}
                 />
-                <button onClick={() => sendMessage(input)} className="p-2">
-                  ➤
-                </button>
+                {isRecording && (
+                  <VoiceRecorder
+                    recordingTime={recordingTime}
+                    onStop={stopRecording}
+                    onCancel={cancelRecording}
+                  />
+                )}
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-              <div className="w-24 h-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center text-4xl">
-                💬
-              </div>
-              <h2 className="text-xl font-bold text-gray-700">
-                Contractor Chat Web
-              </h2>
-              <p className="mt-2 text-sm text-center max-w-md">
-                Send and receive messages. <br /> Select a user from the sidebar
-                to start chatting.
-              </p>
-            </div>
+            <ChatEmptyState />
           )}
         </div>
       </div>
