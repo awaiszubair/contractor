@@ -26,6 +26,10 @@ export default function GlobalChatPage() {
   // Track online users
   const [onlineUsers, setOnlineUsers] = useState(new Set());
 
+  // Typing indicator state
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
+
   useEffect(() => {
     if (user) {
       fetchProjects();
@@ -81,6 +85,44 @@ export default function GlobalChatPage() {
     }
   }, [socket, isConnected]);
 
+  // Listen for typing indicator
+  useEffect(() => {
+    if (socket && isConnected && selectedUser && user) {
+      const handleUserTyping = ({ userId, receiverId }) => {
+        console.log("⌨️  User typing event:", userId, receiverId);
+
+        // Only show typing if the typing user is the selected user
+        // and they're typing to the current user
+        if (userId === selectedUser._id && receiverId === user.id) {
+          console.log("✅ Showing typing indicator");
+          setIsTyping(true);
+        }
+      };
+
+      const handleUserStoppedTyping = ({ userId, receiverId }) => {
+        console.log("⌨️  User stopped typing:", userId, receiverId);
+
+        if (userId === selectedUser._id && receiverId === user.id) {
+          console.log("✅ Hiding typing indicator");
+          setIsTyping(false);
+        }
+      };
+
+      socket.on("user_typing", handleUserTyping);
+      socket.on("user_stopped_typing", handleUserStoppedTyping);
+
+      return () => {
+        socket.off("user_typing", handleUserTyping);
+        socket.off("user_stopped_typing", handleUserStoppedTyping);
+      };
+    }
+  }, [socket, isConnected, selectedUser, user]);
+
+  // Reset typing indicator when changing users
+  useEffect(() => {
+    setIsTyping(false);
+  }, [selectedUser]);
+
   // Handle Socket Events & Room Joining for specific chat
   useEffect(() => {
     if (socket && isConnected && selectedUser && user) {
@@ -124,6 +166,9 @@ export default function GlobalChatPage() {
             return [...prev, msg];
           });
           scrollToBottom();
+
+          // Hide typing indicator when message is received
+          setIsTyping(false);
 
           // Play notification sound if from other user
           if (msgSenderId === selectedUserId) {
@@ -211,6 +256,9 @@ export default function GlobalChatPage() {
       return;
     }
 
+    // Stop typing indicator when sending
+    handleStopTyping();
+
     try {
       const res = await fetch("/api/messages", {
         method: "POST",
@@ -264,6 +312,45 @@ export default function GlobalChatPage() {
       }
     } catch (e) {
       console.error("Error sending message:", e);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    handleTyping();
+  };
+
+  const handleTyping = () => {
+    if (!socket || !selectedUser || !user) return;
+
+    // Emit typing event
+    socket.emit("typing", {
+      userId: user.id,
+      receiverId: selectedUser._id,
+    });
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout to stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      handleStopTyping();
+    }, 2000);
+  };
+
+  const handleStopTyping = () => {
+    if (!socket || !selectedUser || !user) return;
+
+    socket.emit("stop_typing", {
+      userId: user.id,
+      receiverId: selectedUser._id,
+    });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
     }
   };
 
@@ -346,9 +433,19 @@ export default function GlobalChatPage() {
                   <div>
                     <h2 className="font-bold">{selectedUser.name}</h2>
                     <p
-                      className={`text-xs ${isSelectedUserOnline ? "text-green-600" : "text-gray-500"}`}
+                      className={`text-xs ${
+                        isTyping
+                          ? "text-blue-600"
+                          : isSelectedUserOnline
+                            ? "text-green-600"
+                            : "text-gray-500"
+                      }`}
                     >
-                      {isSelectedUserOnline ? "Online" : "Offline"}
+                      {isTyping
+                        ? "typing..."
+                        : isSelectedUserOnline
+                          ? "Online"
+                          : "Offline"}
                     </p>
                   </div>
                 </div>
@@ -413,8 +510,9 @@ export default function GlobalChatPage() {
                 <input
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+                  onBlur={handleStopTyping}
                   placeholder="Type a message"
                   className="flex-1 px-4 py-2 rounded-full border border-white focus:outline-none"
                 />

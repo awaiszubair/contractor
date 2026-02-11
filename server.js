@@ -1,4 +1,3 @@
-// server.js
 const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
@@ -84,6 +83,28 @@ app.prepare().then(() => {
         socket.to(personalRoom).emit("new_message", data);
         console.log(`✉️  Emitted to personal room: ${personalRoom}`);
       }
+    });
+
+    // Handle typing indicator
+    socket.on("typing", ({ userId, receiverId }) => {
+      console.log(`⌨️  User ${userId} is typing to ${receiverId}`);
+
+      // Send typing event to receiver's personal room
+      const receiverRoom = `user_${receiverId}`;
+      socket.to(receiverRoom).emit("user_typing", { userId, receiverId });
+      console.log(`✉️  Sent typing indicator to ${receiverRoom}`);
+    });
+
+    // Handle stop typing
+    socket.on("stop_typing", ({ userId, receiverId }) => {
+      console.log(`⌨️  User ${userId} stopped typing to ${receiverId}`);
+
+      // Send stop typing event to receiver's personal room
+      const receiverRoom = `user_${receiverId}`;
+      socket
+        .to(receiverRoom)
+        .emit("user_stopped_typing", { userId, receiverId });
+      console.log(`✉️  Sent stop typing indicator to ${receiverRoom}`);
     });
 
     socket.on("disconnect", (reason) => {
