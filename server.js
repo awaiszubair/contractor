@@ -50,10 +50,13 @@ app.prepare().then(() => {
       socket.join(roomId);
 
       // Track user as online
-      onlineUsers.set(userId, socket.id);
+      if (!onlineUsers.has(userId)) onlineUsers.set(userId, new Set());
+      onlineUsers.get(userId).add(socket.id);
 
-      console.log(`📍 Joined personal room: ${roomId}`);
-      console.log(`👥 Total online users: ${onlineUsers.size}`);
+      console.log(
+        `📍 ${userId} joined, sockets:`,
+        Array.from(onlineUsers.get(userId)),
+      );
 
       // Broadcast to ALL clients that this user is online
       io.emit("user_online", userId);
@@ -107,24 +110,45 @@ app.prepare().then(() => {
       console.log(`✉️  Sent stop typing indicator to ${receiverRoom}`);
     });
 
+    // Handle message delivered status
+    socket.on("message_delivered", ({ messageId, senderId }) => {
+      console.log(
+        `📬 Message ${messageId} delivered, notifying sender ${senderId}`,
+      );
+
+      const senderSockets = onlineUsers.get(senderId);
+      if (senderSockets) {
+        for (const sid of senderSockets) {
+          io.to(sid).emit("message_delivered", { messageId });
+        }
+      }
+    });
+
+    // Handle message read status
+    socket.on("message_read", ({ messageId, senderId }) => {
+      console.log(`👁️ Message ${messageId} read, notifying sender ${senderId}`);
+
+      // Notify the sender that their message was read
+      const senderSockets = onlineUsers.get(senderId);
+      if (senderSockets) {
+        for (const sid of senderSockets) {
+          io.to(sid).emit("message_read", { messageId });
+        }
+      }
+    });
+
     socket.on("disconnect", (reason) => {
       console.log("❌ Client disconnected:", socket.id, "Reason:", reason);
 
-      // Find and remove user from online users
-      let disconnectedUserId = null;
-      for (const [userId, socketId] of onlineUsers.entries()) {
-        if (socketId === socket.id) {
-          disconnectedUserId = userId;
-          onlineUsers.delete(userId);
+      for (const [userId, socketSet] of onlineUsers.entries()) {
+        if (socketSet.has(socket.id)) {
+          socketSet.delete(socket.id);
+          if (socketSet.size === 0) {
+            onlineUsers.delete(userId);
+            io.emit("user_offline", userId);
+          }
           break;
         }
-      }
-
-      // Broadcast to ALL clients that this user is offline
-      if (disconnectedUserId) {
-        io.emit("user_offline", disconnectedUserId);
-        console.log(`❌ Broadcasting: User ${disconnectedUserId} is offline`);
-        console.log(`👥 Total online users: ${onlineUsers.size}`);
       }
     });
   });

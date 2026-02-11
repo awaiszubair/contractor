@@ -19,6 +19,8 @@ export default function GlobalChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
+  const processedReadRef = useRef(new Set());
+
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -118,9 +120,52 @@ export default function GlobalChatPage() {
     }
   }, [socket, isConnected, selectedUser, user]);
 
+  // Listen for message status updates
+  useEffect(() => {
+    if (socket && isConnected) {
+      const handleMessageDelivered = ({ messageId }) => {
+        console.log("✅ Message delivered:", messageId);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === messageId ? { ...msg, status: "delivered" } : msg,
+          ),
+        );
+      };
+
+      const handleMessageRead = ({ messageId }) => {
+        console.log("👁️ Message read:", messageId);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === messageId ? { ...msg, status: "read" } : msg,
+          ),
+        );
+      };
+
+      socket.on("message_delivered", handleMessageDelivered);
+      socket.on("message_read", handleMessageRead);
+
+      return () => {
+        socket.off("message_delivered", handleMessageDelivered);
+        socket.off("message_read", handleMessageRead);
+      };
+    }
+  }, [socket, isConnected]);
+
   // Reset typing indicator when changing users
   useEffect(() => {
     setIsTyping(false);
+  }, [selectedUser]);
+
+  // Clear processed read messages when switching chat user
+  useEffect(() => {
+    processedReadRef.current.clear();
+  }, [selectedUser]);
+
+  // Mark messages as read when opening a chat
+  useEffect(() => {
+    if (selectedUser && user && messages.length > 0) {
+      markMessagesAsRead();
+    }
   }, [selectedUser]);
 
   // Handle Socket Events & Room Joining for specific chat
@@ -170,10 +215,24 @@ export default function GlobalChatPage() {
           // Hide typing indicator when message is received
           setIsTyping(false);
 
-          // Play notification sound if from other user
+          // If message is from the other user, emit delivered status
           if (msgSenderId === selectedUserId) {
             console.log("🔔 New message came - ting tone");
             // Add your notification sound here
+
+            // Emit delivered status
+            if (socket && msg._id) {
+              socket.emit("message_delivered", {
+                messageId: msg._id,
+                senderId: msgSenderId,
+              });
+              console.log("📬 Emitted delivered status for:", msg._id);
+            }
+
+            // Auto mark as read since chat is open
+            setTimeout(() => {
+              markMessageAsRead(msg._id, msgSenderId);
+            }, 500);
           }
         } else {
           console.log("❌ Message not relevant to current chat, ignoring");
@@ -241,6 +300,58 @@ export default function GlobalChatPage() {
     }
   };
 
+  const markMessagesAsRead = async () => {
+    if (!selectedUser || !user) return;
+
+    // Find unread messages from the selected user
+    const unreadMessages = messages.filter((msg) => {
+      const msgSenderId = msg.sender?._id || msg.sender;
+      return msgSenderId === selectedUser._id && msg.status !== "read";
+    });
+
+    if (unreadMessages.length === 0) return;
+
+    console.log("📖 Marking messages as read:", unreadMessages.length);
+
+    for (const msg of unreadMessages) {
+      await markMessageAsRead(msg._id, selectedUser._id);
+    }
+  };
+
+  const markMessageAsRead = async (messageId, senderId) => {
+    if (!messageId) return;
+
+    if (processedReadRef.current.has(messageId)) return;
+    processedReadRef.current.add(messageId);
+
+    try {
+      const res = await fetch("/api/messages/read", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId }),
+      });
+
+      if (res.ok) {
+        // Update UI immediately
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === messageId ? { ...msg, status: "read" } : msg,
+          ),
+        );
+
+        // Notify sender if online
+        if (socket) {
+          socket.emit("message_read", { messageId });
+        }
+      } else {
+        processedReadRef.current.delete(messageId);
+      }
+    } catch (err) {
+      console.error(err);
+      processedReadRef.current.delete(messageId);
+    }
+  };
+
   const sendMessage = async (content, type = "text", attachments = []) => {
     console.log("Send Message Button clicked");
     if (!content && attachments.length === 0) return;
@@ -269,6 +380,7 @@ export default function GlobalChatPage() {
           content,
           type,
           attachments,
+          status: "sent", // Initial status
         }),
       });
       const data = await res.json();
@@ -380,6 +492,72 @@ export default function GlobalChatPage() {
     }
   };
 
+  // Render message status ticks
+  const renderMessageTicks = (message) => {
+    const msgSenderId = message.sender?._id || message.sender;
+    const isMe = msgSenderId === user.id;
+
+    // Only show ticks for messages sent by current user
+    if (!isMe) return null;
+
+    const status = message.status || "sent";
+
+    if (status === "read") {
+      // Blue double tick
+      return (
+        <span className="inline-flex ml-1">
+          <svg
+            className="w-4 h-4 text-blue-500"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+          >
+            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+          </svg>
+          <svg
+            className="w-4 h-4 text-blue-500 -ml-2"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+          >
+            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+          </svg>
+        </span>
+      );
+    } else if (status === "delivered") {
+      // Gray double tick
+      return (
+        <span className="inline-flex ml-1">
+          <svg
+            className="w-4 h-4 text-gray-400"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+          >
+            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+          </svg>
+          <svg
+            className="w-4 h-4 text-gray-400 -ml-2"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+          >
+            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+          </svg>
+        </span>
+      );
+    } else {
+      // Single gray tick (sent)
+      return (
+        <span className="inline-flex ml-1">
+          <svg
+            className="w-4 h-4 text-gray-400"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+          >
+            <path d="M10.97 5.47a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+          </svg>
+        </span>
+      );
+    }
+  };
+
   if (authLoading) return <div className="p-8">Loading...</div>;
   if (!user) return <div className="p-8">Access Denied</div>;
 
@@ -484,11 +662,12 @@ export default function GlobalChatPage() {
                           </a>
                         )}
 
-                        <span className="block text-[10px] text-gray-500 text-right mt-1">
+                        <span className="block text-[10px] text-gray-500 text-right mt-1 flex items-center justify-end gap-1">
                           {new Date(msg.createdAt).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
+                          {renderMessageTicks(msg)}
                         </span>
                       </div>
                     </div>

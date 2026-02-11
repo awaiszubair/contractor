@@ -29,6 +29,11 @@ const MessageSchema = new mongoose.Schema({
     enum: ["text", "file", "voice"],
     default: "text",
   },
+  status: {
+    type: String,
+    enum: ["sent", "delivered", "read"],
+    default: "sent",
+  },
   createdAt: {
     type: Date,
     default: Date.now,
