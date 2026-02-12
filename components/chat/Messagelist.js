@@ -1,13 +1,19 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import MessageTicks from "./MessageTicks";
 
 export default function MessageList({
   messages,
   currentUserId,
   messagesEndRef,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
 }) {
   // 🔥 Store currently playing audio
   const currentAudioRef = useRef(null);
+  const messageListRef = useRef(null);
+  const [prevScrollHeight, setPrevScrollHeight] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const handleAudioPlay = (e) => {
     // If another audio is already playing → pause it
@@ -19,8 +25,64 @@ export default function MessageList({
     currentAudioRef.current = e.target;
   };
 
+  // Mark as not initial load after first render and scroll to bottom
+  useEffect(() => {
+    if (isInitialLoad && messages.length > 0) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 300);
+    }
+  }, [messages.length, isInitialLoad]);
+
+  // Handle scroll to detect when user reaches top
+  const handleScroll = () => {
+    if (!messageListRef.current || isLoadingMore || !hasMore) return;
+
+    // Prevent triggering on initial load
+    if (isInitialLoad) return;
+
+    const { scrollTop } = messageListRef.current;
+
+    // If user scrolled to top (with some threshold)
+    if (scrollTop < 100) {
+      setPrevScrollHeight(messageListRef.current.scrollHeight);
+      onLoadMore();
+    }
+  };
+
+  // Maintain scroll position after loading more messages
+  useEffect(() => {
+    if (messageListRef.current && prevScrollHeight > 0 && !isLoadingMore) {
+      const newScrollHeight = messageListRef.current.scrollHeight;
+      const scrollDiff = newScrollHeight - prevScrollHeight;
+      messageListRef.current.scrollTop = scrollDiff;
+      setPrevScrollHeight(0);
+    }
+  }, [messages.length, isLoadingMore]);
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[url('/bg-chat.png')] bg-repeat bg-contain bg-opacity-10">
+    <div
+      ref={messageListRef}
+      onScroll={handleScroll}
+      className="flex-1 overflow-y-auto p-4 space-y-2 bg-[url('/bg-chat.png')] bg-repeat bg-contain bg-opacity-10"
+    >
+      {/* WhatsApp-style loader at top */}
+      {hasMore && (
+        <div className="flex justify-center py-2">
+          {isLoadingMore ? (
+            <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+              <span>Loading messages...</span>
+            </div>
+          ) : (
+            <div className="text-gray-400 text-xs">
+              Scroll up for older messages
+            </div>
+          )}
+        </div>
+      )}
+
       {messages.map((msg, idx) => {
         const isMe =
           msg.sender._id === currentUserId || msg.sender === currentUserId;
@@ -44,7 +106,7 @@ export default function MessageList({
                 <audio
                   controls
                   className="mt-2 w-full max-w-xs"
-                  onPlay={handleAudioPlay} // 🔥 Added this
+                  onPlay={handleAudioPlay}
                 >
                   <source src={msg.attachments[0]} type="audio/webm" />
                   <source src={msg.attachments[0]} type="audio/mpeg" />
