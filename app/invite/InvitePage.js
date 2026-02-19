@@ -88,7 +88,7 @@ export default function InvitePage() {
     <div className="max-w-4xl mx-auto">
       <DashboardNav role={user.role} />
 
-      <div className="bg-white p-8 rounded-[30px] shadow-sm border border-gray-100">
+      <div className="bg-white max-sm:py-4 max-sm:px-4 md:p-8 rounded-[20px] md:rounded-[30px] shadow-sm border border-gray-100">
         <h1 className="text-2xl font-bold mb-6">Invite New User</h1>
 
         {message && (

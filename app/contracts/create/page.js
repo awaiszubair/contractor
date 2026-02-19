@@ -7,6 +7,7 @@ import TextField from "@/components/TextField";
 import { MdPayments } from "react-icons/md";
 import { PiFilmReelThin } from "react-icons/pi";
 import { PiFilmReelBold } from "react-icons/pi";
+import DashboardNav from "@/components/DashboardNav";
 
 export default function CreateContractPage() {
   const { user } = useAuth();
@@ -140,11 +141,13 @@ export default function CreateContractPage() {
 
   return (
     <div className="max-w-5xl mx-auto py-8">
-      <h1 className="text-3xl font-bold">Create New Contract</h1>
+      <div className="w-full flex flex-col gap-y-2">
+        <h1 className="text-3xl font-bold">Create New Contract</h1>
       <p className="text-gray-600 mb-8">
         Fill in the details to create a new contract for photography and
         videography services.
       </p>
+        </div>
 
       {error && (
         <div className="bg-red-100 text-red-700 p-4 rounded mb-4">{error}</div>
@@ -201,7 +204,7 @@ export default function CreateContractPage() {
 
         {/* 2. Client Information */}
         <div className="bg-white p-6 md:p-8 lg:p-10 rounded-[30px] shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-4 border-b pb-2">
+          <div className="flex max-sm:flex-col items-start gap-y-2 justify-between sm:items-center mb-4 border-b pb-2">
             <div className="flex items-center gap-2">
               <svg
                 width="24"
@@ -236,10 +239,10 @@ export default function CreateContractPage() {
               <h3 className="text-lg font-bold">Client Information</h3>
             </div>
             {/* Dropdown for existing clients */}
-            <div className="w-1/2">
+            <div className="max-sm:w-full sm:w-1/2 relative">
               <select
                 onChange={handleClientSelect}
-                className="w-full border text-sm border-[#00000033] bg-[#F8F8F8] focus:outline-none 
+                className="w-full appearance-none pr-10 px-4 border text-sm border-[#00000033] bg-[#F8F8F8] focus:outline-none 
 focus:border-[#00000066] 
 focus:ring-2 focus:ring-[#00000022] py-2 rounded-[15px]"
               >
@@ -249,7 +252,19 @@ focus:ring-2 focus:ring-[#00000022] py-2 rounded-[15px]"
                     {c.name} ({c.email})
                   </option>
                 ))}
+                
               </select>
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+    </svg>
+  </div>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -338,16 +353,17 @@ focus:ring-2 focus:ring-[#00000022] py-2 rounded-[15px]"
             <h3 className="text-lg font-bold">Service Details</h3>
           </div>
           <div className="space-y-4">
-            <div>
+            <div className="">
               <label className="block text-sm font-medium mb-1">
                 Service Type *
               </label>
-              <select
+            <div className="relative w-full"> 
+                <select
                 name="serviceType"
                 required
                 value={formData.serviceType}
                 onChange={handleChange}
-                className="w-full border border-[#00000033] bg-[#F8F8F8] focus:outline-none 
+                className="w-full appearance-none pr-10 px-4 border border-[#00000033] bg-[#F8F8F8] focus:outline-none 
 focus:border-[#00000066] 
 focus:ring-2 focus:ring-[#00000022] p-2 rounded-[15px]"
               >
@@ -356,6 +372,18 @@ focus:ring-2 focus:ring-[#00000022] p-2 rounded-[15px]"
                 <option value="filmer">Filmer</option>
                 <option value="videographer">Videographer</option>
               </select>
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+    </svg>
+  </div>
+            </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {/* <div>
@@ -487,14 +515,14 @@ focus:ring-2 focus:ring-[#00000022] p-2 rounded-[15px]"
           <button
             type="submit"
             disabled={loading}
-            className="bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 disabled:opacity-50"
+            className="bg-black text-white max-sm:text-sm px-4 md:px-8 py-3 rounded-full hover:bg-gray-800 disabled:opacity-50"
           >
             {loading ? "Creating..." : "Add Contract"}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="bg-[#F8F8F8] border-1 border-[#00000033] px-8 py-3 rounded-full text-gray-600 hover:underline"
+            className="bg-[#F8F8F8] border-1 max-sm:text-sm border-[#00000033] px-4 md:px-8 py-3 rounded-full text-gray-600 hover:underline"
           >
             Cancel
           </button>

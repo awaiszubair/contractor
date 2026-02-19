@@ -231,29 +231,62 @@ export default function ProjectsPage() {
         </div>
 
         {/* Status Filters */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex  gap-3">
           <button
             onClick={() => setFilter("All Projects")}
             className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
               filter === "All Projects"
                 ? "bg-black text-white border-black"
-                : "bg-white border-gray-300 hover:bg-gray-100"
+                : "bg-white border-gray-300 hover:bg-gray-100 cursor-pointer"
             }`}
           >
             All
           </button>
 
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="px-4 py-2 rounded-full border border-gray-300 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black"
-          >
-            <option value="All Projects">All Status</option>
-            <option value="Draft">Draft</option>
-            <option value="Pending">Pending</option>
-            <option value="Active">Active</option>
-            <option value="Completed">Completed</option>
-          </select>
+         <div className="relative w-full sm:w-auto">
+  <select
+    value={filter}
+    onChange={(e) => setFilter(e.target.value)}
+    className="
+      appearance-none
+      w-full
+      px-4
+      pr-10
+      py-2
+      cursor-pointer
+      rounded-full
+      border border-gray-300
+      bg-white
+      text-sm font-medium
+      focus:outline-none
+      focus:ring-1 focus:ring-black/20
+      focus:border-black/30
+      hover:border-gray-300
+      transition-all
+    "
+  >
+    <option value="All Projects">All Status</option>
+    <option value="Draft">Draft</option>
+    <option value="Pending">Pending</option>
+    <option value="Active">Active</option>
+    <option value="Completed">Completed</option>
+  </select>
+
+  {/* Custom Arrow */}
+  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+    </svg>
+  </div>
+</div>
+
+          
         </div>
       </div>
 

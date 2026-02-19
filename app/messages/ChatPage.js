@@ -192,24 +192,7 @@ export default function GlobalChatPage() {
     }
   };
 
-  // Loading and auth checks
-  if (authLoading) return <div className="p-8">Loading...</div>;
-  if (!user) return <div className="p-8">Access Denied</div>;
-
-  const isSelectedUserOnline = selectedUser
-    ? onlineUsers.has(selectedUser._id)
-    : false;
-
-  console.log("Selected user online status:", {
-    selectedUserId: selectedUser?._id,
-    isOnline: isSelectedUserOnline,
-    allOnlineUsers: Array.from(onlineUsers),
-  });
-
-    // ADD THIS - Auto-select chat from URL params
-  // In GlobalChatPage.js
-
-useEffect(() => {
+  useEffect(() => {
   const autoSelectChat = async () => {
     if (!user || !chatId || !userId) return;
     
@@ -239,11 +222,30 @@ useEffect(() => {
   autoSelectChat();
 }, [user, chatId, userId]); // Remove projects and selectedUser from dependencies
 
+  // Loading and auth checks
+  if (authLoading) return <div className="p-8">Loading...</div>;
+  if (!user) return <div className="p-8">Access Denied</div>;
+
+  const isSelectedUserOnline = selectedUser
+    ? onlineUsers.has(selectedUser._id)
+    : false;
+
+  console.log("Selected user online status:", {
+    selectedUserId: selectedUser?._id,
+    isOnline: isSelectedUserOnline,
+    allOnlineUsers: Array.from(onlineUsers),
+  });
+
+    // ADD THIS - Auto-select chat from URL params
+  // In GlobalChatPage.js
+
+
+
 
   return (
     <div className="max-w-7xl mx-auto">
       <DashboardNav role={user.role} />
-      <div className="w-full flex flex-col h-[calc(100vh-100px)] md:flex-row bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+      <div className={`w-full flex flex-col overflow-hidden ${selectedUser ? 'h-[calc(100vh-100px)]' : 'h-[100vh]'} md:flex-row bg-white rounded-lg shadow border border-gray-200 `}>
         <ChatSidebar
           onSelectUser={setSelectedUser}
           selectedUser={selectedUser}
@@ -254,7 +256,7 @@ useEffect(() => {
           socket={socket}
         />
 
-        <div className="flex-1 flex flex-col h-full bg-[#f0f2f5]">
+        <div className="flex-1 flex flex-col  h-full bg-[#f0f2f5]">
           {selectedUser ? (
             <>
               <ChatHeader

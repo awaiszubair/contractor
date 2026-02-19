@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { IoSearchSharp } from "react-icons/io5";
+
 import { useAuth } from "@/context/AuthContext";
 
 export default function ChatSidebar({
@@ -107,7 +109,7 @@ export default function ChatSidebar({
   );
 
   return (
-    <div className="w-full md:w-1/3 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className={`w-full md:w-1/3 bg-white border-r border-gray-200 flex flex-col h-full ${selectedUser ? 'max-sm:hidden' : 'flex'}`}>
       {/* Header / Filter */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex justify-between items-center mb-4">
@@ -135,7 +137,8 @@ export default function ChatSidebar({
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-gray-100 rounded-full px-4 py-2 pl-10 text-sm focus:outline-none"
           />
-          <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+          {/* <span className="absolute left-3 top-2.5 text-gray-400">🔍</span> */}
+          <IoSearchSharp className="absolute left-3 top-2.5 text-gray-400" />
         </div>
       </div>
 

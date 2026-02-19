@@ -68,12 +68,12 @@ export default function DashboardPage() {
         {/* Left Column (Main Content) */}
         <div className="lg:col-span-3 space-y-6">
           {/* Welcome Row */}
-          <div className="flex justify-between items-center">
+          <div className="max-sm:grid grid-cols-1 md:grid-cols-2 gap-y-3 flex justify-between items-center">
             <h1 className="text-2xl font-bold">Welcome, {user.name}</h1>
             {user.role === "admin" && (
               <Link
                 href="/contracts/create"
-                className="bg-black rounded-[82px] text-white px-4 py-3 hover:bg-gray-800 text-sm"
+                className="bg-black rounded-[82px] w-max text-white px-4 py-3 hover:bg-gray-800 text-sm"
               >
                 + Create Contract
               </Link>
@@ -142,61 +142,147 @@ export default function DashboardPage() {
           </div>
 
           {/* Projects List Container */}
-          <div className="bg-[#0000000F] p-6 rounded-[20px]">
+          <div className="bg-[#0000000F] md:p-6 p-3 rounded-[20px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Recent Projects</h2>
               <Link
-                href="/projects"
-                className="text-sm font-semibold hover:underline"
-              >
-                View All...
-              </Link>
+                  href="/projects"
+                  className={`
+                    inline-flex items-center justify-center 
+                    px-4 py-2 min-w-[100px]
+                    max-sm:w-full
+                    bg-gray-100 text-gray-900 
+                    text-sm font-medium 
+                    rounded-full 
+                    hover:bg-gray-200 
+                    active:bg-gray-300 
+                    transition-all duration-200 shadow-sm
+                    border border-gray-300/70
+                  `}
+                >
+                  View All
+                </Link>
             </div>
 
             {recentProjects.length > 0 ? (
               <div className="space-y-3">
                 {recentProjects.map((project) => (
+                  // <Link
+                  //   key={project._id}
+                  //   href={`/projects/${project._id}`}
+                  //   className="block bg-white p-4 rounded-[20px] shadow-sm hover:shadow-md transition-shadow"
+                  // >
+                  //   <div className="flex gap-x-2 justify-between">
+                  //     <span className="font-bold">{project.title}</span>
+                  //     <div className="text-sm flex text-gray-500 space-x-5">
+                  //       {project.dueDate && (
+                  //         <span>
+                  //           <span className="text-black font-medium">
+                  //             Due Date
+                  //           </span>{" "}
+                  //           : {new Date(project.dueDate).toLocaleDateString()}
+                  //         </span>
+                  //       )}
+                  //       <div className="flex items-center">
+                  //         <span
+                  //           className={`px-2 py-0.5 rounded text-xs font-bold
+                  //                                   ${
+                  //                                     project.status ===
+                  //                                     "Active"
+                  //                                       ? "bg-green-100 text-green-800"
+                  //                                       : project.status ===
+                  //                                           "Pending"
+                  //                                         ? "bg-yellow-100 text-yellow-800"
+                  //                                         : project.status ===
+                  //                                             "Completed"
+                  //                                           ? "bg-gray-200 text-gray-800"
+                  //                                           : "bg-gray-100"
+                  //                                   }`}
+                  //         >
+                  //           {project.status}
+                  //         </span>
+                  //       </div>
+                  //     </div>
+                  //   </div>
+                  //   <p className="text-sm text-gray-600 mt-2 line-clamp-1">
+                  //     {project.description}
+                  //   </p>
+                  // </Link>
                   <Link
-                    key={project._id}
-                    href={`/projects/${project._id}`}
-                    className="block bg-white p-4 rounded-[20px] shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex gap-x-2 justify-between">
-                      <span className="font-bold">{project.title}</span>
-                      <div className="text-sm flex text-gray-500 space-x-5">
-                        {project.dueDate && (
-                          <span>
-                            <span className="text-black font-medium">
-                              Due Date
-                            </span>{" "}
-                            : {new Date(project.dueDate).toLocaleDateString()}
-                          </span>
-                        )}
-                        <div className="flex items-center">
-                          <span
-                            className={`px-2 py-0.5 rounded text-xs font-bold
-                                                    ${
-                                                      project.status ===
-                                                      "Active"
-                                                        ? "bg-green-100 text-green-800"
-                                                        : project.status ===
-                                                            "Pending"
-                                                          ? "bg-yellow-100 text-yellow-800"
-                                                          : project.status ===
-                                                              "Completed"
-                                                            ? "bg-gray-200 text-gray-800"
-                                                            : "bg-gray-100"
-                                                    }`}
-                          >
-                            {project.status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-2 line-clamp-1">
-                      {project.description}
-                    </p>
-                  </Link>
+  key={project._id}
+  href={`/projects/${project._id}`}
+  className="block bg-white p-4 rounded-[20px] shadow-sm hover:shadow-md transition-shadow"
+>
+  {/* Desktop & Tablet Layout (unchanged) */}
+  <div className="hidden sm:flex gap-x-2 justify-between">
+    <span className="font-bold">{project.title}</span>
+
+    <div className="text-sm flex text-gray-500 space-x-5">
+      {project.dueDate && (
+        <span>
+          <span className="text-black font-medium">Due Date</span> :{" "}
+          {new Date(project.dueDate).toLocaleDateString()}
+        </span>
+      )}
+
+      <div className="flex items-center">
+        <span
+          className={`px-2 py-0.5 rounded text-xs font-bold
+            ${
+              project.status === "Active"
+                ? "bg-green-100 text-green-800"
+                : project.status === "Pending"
+                ? "bg-yellow-100 text-yellow-800"
+                : project.status === "Completed"
+                ? "bg-gray-200 text-gray-800"
+                : "bg-gray-100"
+            }`}
+        >
+          {project.status}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {/* Mobile Layout */}
+  <div className="sm:hidden space-y-2">
+    {/* Title */}
+    <div className="flex justify-between items-start">
+      <span className="font-bold text-base leading-tight">
+        {project.title}
+      </span>
+
+      <span
+        className={`px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap
+          ${
+            project.status === "Active"
+              ? "bg-green-100 text-green-800"
+              : project.status === "Pending"
+              ? "bg-yellow-100 text-yellow-800"
+              : project.status === "Completed"
+              ? "bg-gray-200 text-gray-800"
+              : "bg-gray-100"
+          }`}
+      >
+        {project.status}
+      </span>
+    </div>
+
+    {/* Due Date */}
+    {project.dueDate && (
+      <div className="text-xs text-gray-500">
+        <span className="font-medium text-black">Due:</span>{" "}
+        {new Date(project.dueDate).toLocaleDateString()}
+      </div>
+    )}
+  </div>
+
+  {/* Description (same but better for mobile) */}
+  <p className="text-sm text-gray-600 mt-2 line-clamp-2 sm:line-clamp-1">
+    {project.description}
+  </p>
+</Link>
+
                 ))}
               </div>
             ) : (
@@ -209,11 +295,22 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Recent Messages</h2>
               <Link
-                href="/messages"
-                className="text-sm font-semibold hover:underline"
-              >
-                View All...
-              </Link>
+                  href="/messages"
+                  className={`
+                    inline-flex items-center justify-center 
+                    px-4 py-2 min-w-[100px]
+                    max-sm:w-full
+                    bg-gray-100 text-gray-900 
+                    text-sm font-medium 
+                    rounded-full 
+                    hover:bg-gray-200 
+                    active:bg-gray-300 
+                    transition-all duration-200 shadow-sm
+                    border border-gray-300/70
+                  `}
+                >
+                  View All
+                </Link>
             </div>
 
             {/* {recentMessages.length > 0 ? (

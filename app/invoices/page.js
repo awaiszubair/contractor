@@ -93,7 +93,7 @@ export default function InvoicesPage() {
           <h1 className="text-2xl font-bold">Invoices</h1>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-black text-white px-4 py-2 rounded text-sm hover:bg-gray-800"
+            className="bg-black cursor-pointer text-white px-4 py-2 rounded-full text-sm hover:bg-gray-800"
           >
             {showForm ? "Cancel Upload" : "+ Submit Invoice"}
           </button>
