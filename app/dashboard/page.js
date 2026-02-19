@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import ProjectStatusCards from "@/components/ProjectStatusCards";
 import ChangePassword from "@/components/ChangePassword";
+import RecentMessages from "@/components/chat/RecentMessages";
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -215,7 +216,7 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {recentMessages.length > 0 ? (
+            {/* {recentMessages.length > 0 ? (
               <div className="space-y-3">
                 {recentMessages.map((msg) => (
                   <div
@@ -246,7 +247,8 @@ export default function DashboardPage() {
               </div>
             ) : (
               <p className="text-gray-500 text-sm">No recent messages.</p>
-            )}
+            )} */}
+            <RecentMessages />
           </div>
         </div>
 

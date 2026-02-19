@@ -26,7 +26,7 @@ export async function POST(req) {
     console.log("The recieved data is: ", body);
 
     // Validate required fields (simplified)
-    if (!body.title || !body.clientDetails) {
+    if (!body.title) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 },
@@ -34,10 +34,12 @@ export async function POST(req) {
     }
 
     // Handle Client Finding/Creation
-    let clientId = body.clientDetails;
+    const { clientDetails, ...projectData } = body;
 
-    if (body.clientDetails && body.clientDetails.email) {
-      const { name, email, phone } = body.clientDetails;
+    let clientId = null;
+
+    if (clientDetails && clientDetails.email) {
+      const { name, email, phone } = clientDetails;
       let existingUser = await User.findOne({ email });
 
       if (!existingUser) {
@@ -67,16 +69,9 @@ export async function POST(req) {
       clientId = existingUser._id;
     }
 
-    if (!clientId) {
-      return NextResponse.json(
-        { error: "Client identification failed" },
-        { status: 400 },
-      );
-    }
-
     const newProject = await Project.create({
-      ...body,
-      client: clientId,
+      ...projectData, // safe project fields only
+      client: clientId, // can be null (allowed)
       createdBy: user.id,
       // Ensure assignedContractors is array of IDs
     });

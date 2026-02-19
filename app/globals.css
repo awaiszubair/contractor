@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+@keyframes highlight-pulse {
+  0%, 100% {
+    background-color: transparent;
+    border-radius: 15px;
+    transform: scale(1);
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.3); /* blue highlight */
+    transform: scale(1.02);
+  }
+}
+
+.animate-highlight-pulse {
+  animation: highlight-pulse 1.5s ease-in-out 2;
+}
+
+audio::-webkit-media-controls-panel {
+  background-color: #D9D9D9 !important;
+} 
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

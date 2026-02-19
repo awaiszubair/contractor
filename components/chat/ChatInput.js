@@ -6,9 +6,23 @@ export default function ChatInput({
   onFileChange,
   onMicClick,
   isRecording,
+  pendingFile,
+  setPendingFile,
 }) {
   return (
     <div className="p-3 bg-gray-100 flex items-center gap-3">
+      {pendingFile && (
+        <div className="flex items-center gap-2 p-2 bg-gray-200 rounded">
+          <span>{pendingFile.name}</span>
+          <button
+            onClick={() => setPendingFile(null)}
+            className="text-red-500 font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <label className="cursor-pointer p-2 hover:bg-gray-200 rounded-full">
         <input type="file" className="hidden" onChange={onFileChange} />
         📎

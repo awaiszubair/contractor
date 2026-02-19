@@ -9,6 +9,7 @@ export function useChatState() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [pendingFile, setPendingFile] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
@@ -37,6 +38,8 @@ export function useChatState() {
     setIsLoadingMore,
     page,
     setPage,
+    pendingFile,
+    setPendingFile,
   };
 }
 
@@ -58,6 +61,8 @@ export function useChatHandlers({
   isLoadingMore,
   hasMore,
   page,
+  pendingFile,
+  setPendingFile,
   setPage,
 }) {
   const fetchProjects = async () => {
@@ -100,7 +105,13 @@ export function useChatHandlers({
 
         if (append) {
           // Prepend older messages when loading more
-          setMessages((prev) => [...newMessages, ...prev]);
+          setMessages((prev) => {
+            const existingIds = new Set(prev.map((m) => m._id));
+            const uniqueMessages = newMessages.filter(
+              (msg) => !existingIds.has(msg._id),
+            );
+            return [...uniqueMessages, ...prev];
+          });
         } else {
           // Replace messages on initial load
           setMessages(newMessages);
@@ -119,12 +130,31 @@ export function useChatHandlers({
     if (isLoadingMore || !hasMore) return;
 
     setIsLoadingMore(true);
-    await fetchMessages(page + 1, true);
+
+    // Use functional state update to avoid stale closure
+    setPage((prevPage) => {
+      const nextPage = prevPage + 1;
+      fetchMessages(nextPage, true);
+      return nextPage;
+    });
+
     setIsLoadingMore(false);
   };
 
   const sendMessage = async (content, type = "text", attachments = []) => {
     console.log("Send Message Button clicked");
+
+    if (pendingFile) {
+      const fileData = await uploadFile(
+        pendingFile,
+        pendingFile.name,
+        "file",
+        false,
+      );
+      attachments = [...attachments, fileData.url]; // server response url
+      setPendingFile(null);
+    }
+
     if (!content && attachments.length === 0) return;
     if (!selectedUser) return;
 
@@ -185,7 +215,7 @@ export function useChatHandlers({
     }
   };
 
-  const uploadFile = async (file, name, type = "file") => {
+  const uploadFile = async (file, name, type = "file", autoSend = true) => {
     const formData = new FormData();
     formData.append("file", file, name || file.name);
 
@@ -197,7 +227,11 @@ export function useChatHandlers({
 
       const data = await res.json();
 
-      if (res.ok) await sendMessage(null, type, [data.url]);
+      if (!res.ok) throw new Error("Upload failed");
+
+      if (autoSend) await sendMessage(null, type, [data.url]);
+
+      return data; // return uploaded file data
     } catch (e) {
       console.error("Upload error:", e);
     }

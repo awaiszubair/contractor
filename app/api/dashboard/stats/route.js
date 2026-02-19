@@ -1,6 +1,5 @@
 import dbConnect from '@/lib/db';
 import Project from '@/models/Project';
-import User from '@/models/User';
 import Message from '@/models/Message';
 import { verifyToken } from '@/lib/auth';
 import { NextResponse } from 'next/server';
@@ -63,7 +62,12 @@ export async function GET(req) {
         const userProjects = await Project.find(projectQuery).select('_id');
         const projectIds = userProjects.map(p => p._id);
 
-        const recentMessages = await Message.find({ project: { $in: projectIds } })
+        // const recentMessages = await Message.find({ project: { $in: projectIds } })
+        const recentMessages = await Message.find({ 
+    project: { $in: projectIds },
+    receiver: user.id, // Only messages sent TO this user
+    sender: { $ne: user.id } // Exclude messages sent by this user
+})
             .sort({ createdAt: -1 })
             .limit(5)
             .populate('sender', 'name')

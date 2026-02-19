@@ -9,13 +9,14 @@ export default function ChatSidebar({
   projects,
   onFilterChange,
   currentFilter,
+  onlineUsers,
   socket,
 }) {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  // const [onlineUsers, setOnlineUsers] = useState(new Set());
 
   useEffect(() => {
     if (user) {
@@ -25,32 +26,19 @@ export default function ChatSidebar({
 
   // ✅ Listen for real-time updates
   useEffect(() => {
-    if (!socket || !socket.connected) {
-      console.log("[ChatSidebar] Socket not available or not connected");
-      return;
-    }
+    if (!socket || !socket.connected) return;
 
-    console.log("[ChatSidebar] 🔌 Setting up socket listeners");
-
-    // ✅ 1. Handle incoming private messages (for sidebar last message update)
     const handlePrivateMessage = (message) => {
-      console.log("[ChatSidebar] 📩 Received private_message:", message);
-
       setUsers((prevUsers) => {
         const updatedUsers = prevUsers.map((u) => {
-          // Get sender and receiver IDs
           const senderId =
             typeof message.sender === "object"
               ? message.sender._id
               : message.sender;
+
           const receiverId = message.receiver;
 
-          // Check if this message involves this user
-          const isFromThisUser = senderId === u._id;
-          const isToThisUser = receiverId === u._id;
-
-          if (isFromThisUser || isToThisUser) {
-            console.log("[ChatSidebar] ✅ Updating last message for:", u.name);
+          if (senderId === u._id || receiverId === u._id) {
             return {
               ...u,
               lastMessage: {
@@ -64,74 +52,27 @@ export default function ChatSidebar({
               },
             };
           }
+
           return u;
         });
 
-        // Sort by most recent message
-        return updatedUsers.sort((a, b) => {
-          const aTime = a.lastMessage?.createdAt
-            ? new Date(a.lastMessage.createdAt)
-            : new Date(0);
-          const bTime = b.lastMessage?.createdAt
-            ? new Date(b.lastMessage.createdAt)
-            : new Date(0);
-          return bTime - aTime;
-        });
+        return updatedUsers.sort(
+          (a, b) =>
+            new Date(b.lastMessage?.createdAt || 0) -
+            new Date(a.lastMessage?.createdAt || 0),
+        );
       });
     };
 
-    // ✅ 2. Handle new_message (alternative event for messages)
-    const handleNewMessage = (message) => {
-      console.log("[ChatSidebar] 📨 Received new_message:", message);
-      // Use the same handler as private_message
-      handlePrivateMessage(message);
-    };
-
-    // ✅ 3. Handle initial online users list
-    const handleOnlineUsersList = (userIds) => {
-      console.log("[ChatSidebar] 📋 Received online_users_list:", userIds);
-      setOnlineUsers(new Set(userIds));
-    };
-
-    // ✅ 4. Handle user coming online
-    const handleUserOnline = (userId) => {
-      console.log("[ChatSidebar] 🟢 User came online:", userId);
-      setOnlineUsers((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(userId);
-        console.log("[ChatSidebar] Updated online users:", Array.from(newSet));
-        return newSet;
-      });
-    };
-
-    // ✅ 5. Handle user going offline
-    const handleUserOffline = (userId) => {
-      console.log("[ChatSidebar] 🔴 User went offline:", userId);
-      setOnlineUsers((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(userId);
-        console.log("[ChatSidebar] Updated online users:", Array.from(newSet));
-        return newSet;
-      });
-    };
-
-    // Register all socket listeners
+    console.log(
+      "📡 Setting up socket listeners for sidebar updates++++++++++++++++++",
+    );
     socket.on("private_message", handlePrivateMessage);
-    socket.on("new_message", handleNewMessage);
-    socket.on("online_users_list", handleOnlineUsersList);
-    socket.on("user_online", handleUserOnline);
-    socket.on("user_offline", handleUserOffline);
+    socket.on("new_message", handlePrivateMessage);
 
-    console.log("[ChatSidebar] ✅ Socket listeners registered");
-
-    // Cleanup listeners
     return () => {
-      console.log("[ChatSidebar] 🧹 Cleaning up socket listeners");
       socket.off("private_message", handlePrivateMessage);
-      socket.off("new_message", handleNewMessage);
-      socket.off("online_users_list", handleOnlineUsersList);
-      socket.off("user_online", handleUserOnline);
-      socket.off("user_offline", handleUserOffline);
+      socket.off("new_message", handlePrivateMessage);
     };
   }, [socket, socket?.connected]);
 

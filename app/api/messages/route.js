@@ -114,20 +114,9 @@ export async function GET(req) {
     }
 
     let query = {};
-
-    console.log("[GET Messages] User ID:", user.id, "Type:", typeof user.id);
-    console.log(
-      "[GET Messages] Receiver ID:",
-      receiverId,
-      "Type:",
-      typeof receiverId,
-    );
-    console.log("[GET Messages] Project ID:", projectId);
-    console.log("[GET Messages] Page:", page, "Limit:", limit);
+    const mongoose = require("mongoose");
 
     if (receiverId) {
-      // Convert string IDs to ObjectId for proper comparison
-      const mongoose = require("mongoose");
       const userObjectId =
         typeof user.id === "string"
           ? new mongoose.Types.ObjectId(user.id)
@@ -137,7 +126,6 @@ export async function GET(req) {
           ? new mongoose.Types.ObjectId(receiverId)
           : receiverId;
 
-      // Find messages between these two users (sent or received)
       const userFilter = {
         $or: [
           { sender: userObjectId, receiver: receiverObjectId },
@@ -155,28 +143,30 @@ export async function GET(req) {
         query = userFilter;
       }
     } else if (projectId) {
-      query.project = projectId;
+      query.project =
+        typeof projectId === "string"
+          ? new mongoose.Types.ObjectId(projectId)
+          : projectId;
     }
 
     console.log("[GET Messages] Query:", JSON.stringify(query));
 
-    // Get total count for pagination
+    // Total messages count
     const totalMessages = await Message.countDocuments(query);
 
-    // Calculate skip value for pagination
-    // We want to get the LATEST messages, so we need to skip from the end
-    const skip = Math.max(0, totalMessages - page * limit);
-    const actualLimit =
-      page === 1 ? limit : Math.min(limit, totalMessages - skip);
+    // ✅ WhatsApp-style pagination: newest first, skip older messages
+    const skip = page === 1 ? 0 : 30 + (page - 2) * 20;
 
-    const messages = await Message.find(query)
+    let messages = await Message.find(query)
       .populate("sender", "name email avatar")
-      .sort({ createdAt: -1 }) // Get newest first
+      .sort({ createdAt: -1 }) // newest first
       .skip(skip)
-      .limit(actualLimit)
-      .then((msgs) => msgs.reverse()); // Reverse to show oldest first in the array
+      .limit(limit);
 
-    const hasMore = skip > 0;
+    // Reverse to show oldest at top and newest at bottom
+    messages = messages.reverse();
+
+    const hasMore = totalMessages > page * limit;
 
     console.log(
       "[GET Messages] Found",
@@ -185,7 +175,6 @@ export async function GET(req) {
       totalMessages,
       "total",
     );
-    console.log("[GET Messages] Skip:", skip, "HasMore:", hasMore);
 
     if (messages.length > 0) {
       console.log(
