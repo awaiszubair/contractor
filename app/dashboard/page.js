@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import ProjectStatusCards from "@/components/ProjectStatusCards";
 import ChangePassword from "@/components/ChangePassword";
 import RecentMessages from "@/components/chat/RecentMessages";
+import Loading from "@/components/Loading";
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -55,7 +56,7 @@ export default function DashboardPage() {
   };
 
   if (authLoading || loading)
-    return <div className="p-8">Loading Dashboard...</div>;
+    return <Loading />
   if (!user) return <div className="p-8">Access Denied</div>;
 
   return (

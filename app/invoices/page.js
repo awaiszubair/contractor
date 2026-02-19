@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import Loading from "@/components/Loading";
 import DashboardNav from "@/components/DashboardNav";
 
 export default function InvoicesPage() {
@@ -81,7 +82,7 @@ export default function InvoicesPage() {
     }
   };
 
-  if (authLoading || loading) return <div className="p-8">Loading...</div>;
+  if (authLoading || loading) return <Loading message="Loading Invoices..." />; 
   if (!user) return <div className="p-8">Access Denied</div>;
 
   return (

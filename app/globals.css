@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 @keyframes highlight-pulse {
   0%, 100% {
     background-color: transparent;

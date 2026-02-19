@@ -1,5 +1,6 @@
 "use client";
-import { useSearchParams } from "next/navigation"; // ADD THIS
+import { useSearchParams } from "next/navigation"; 
+import Loading from "@/components/Loading";
 import { useEffect, useState } from "react";
 
 import {
@@ -223,7 +224,7 @@ export default function GlobalChatPage() {
 }, [user, chatId, userId]); // Remove projects and selectedUser from dependencies
 
   // Loading and auth checks
-  if (authLoading) return <div className="p-8">Loading...</div>;
+  if (authLoading) return <Loading message="Loading Messages..." />;
   if (!user) return <div className="p-8">Access Denied</div>;
 
   const isSelectedUserOnline = selectedUser

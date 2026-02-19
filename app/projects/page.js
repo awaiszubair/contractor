@@ -105,6 +105,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import DashboardNav from "@/components/DashboardNav";
 import Link from "next/link";
+import Loading from "@/components/Loading";
 
 export default function ProjectsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -163,7 +164,7 @@ export default function ProjectsPage() {
     setProjects(filtered);
   }, [searchTerm, filter, allProjects]);
 
-  if (authLoading || loading) return <div className="p-8">Loading...</div>;
+  if (authLoading || loading) return <Loading message="Loading Projects"/>
   if (!user) return <div className="p-8">Access Denied</div>;
 
   return (
