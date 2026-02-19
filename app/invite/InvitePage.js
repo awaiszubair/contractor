@@ -91,7 +91,7 @@ export default function InvitePage() {
       <div className="bg-white max-sm:py-4 max-sm:px-4 md:p-8 rounded-[20px] md:rounded-[30px] shadow-sm border border-gray-100">
         <h1 className="text-2xl font-bold mb-6">Invite New User</h1>
 
-        {message && (
+        {/* {message && (
           <div className="mb-4 p-4 bg-green-50 text-green-700 rounded-[30px] border border-green-200">
             {message}
             {inviteLink && (
@@ -103,7 +103,7 @@ export default function InvitePage() {
               </p>
             )}
           </div>
-        )}
+        )} */}
         {error && (
           <div className="mb-4 p-4 bg-red-50 text-red-700 rounded border border-red-200">
             {error}
