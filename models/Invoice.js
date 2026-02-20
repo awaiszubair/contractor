@@ -16,7 +16,7 @@ const InvoiceSchema = new mongoose.Schema({
     //     ref: 'User',
     //     required: true, // Only Admin can receive from Client, Contractor receives from Admin (technically) or Admin checks them
     // },
-     receivers: [  // ✅ Array mein badal do
+     receiver: [  // ✅ Array mein badal do
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
