@@ -94,15 +94,6 @@ export default function InvitePage() {
         {message && (
           <div className="mb-4 p-4 bg-green-50 text-green-700 rounded-[30px] border border-green-200">
             {message}
-            {inviteLink && (
-              <p className="mt-2 text-sm text-green-900 break-all">
-                <strong>Email sended successfully</strong> 
-                {/* <br /> */}
-                {/* <a href={inviteLink} className="underline">
-                  {inviteLink}
-                </a> */}
-              </p>
-            )}
           </div>
         )}
         {error && (
@@ -242,7 +233,7 @@ focus:ring-2 focus:ring-[#00000022]"
                   className="w-full px-3 py-2 border rounded focus:ring-black focus:border-black h-24"
                 />
               </div> */}
-              <TextField
+              {/* <TextField
                 label="Description / Notes"
                 type="textarea"
                 value={formData.description}
@@ -250,7 +241,7 @@ focus:ring-2 focus:ring-[#00000022]"
                   setFormData({ ...formData, description: e.target.value })
                 }
                 classes="md:col-span-2"
-              />
+              /> */}
             </div>
           </div>
 

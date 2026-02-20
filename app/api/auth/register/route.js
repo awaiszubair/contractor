@@ -107,7 +107,7 @@ export async function POST(req) {
       role: role || "client",
       name: name || decodedName || "New User",
       phone: phone || decodedPhone || "",
-      description: description || decodedDescription || "",
+      // description: description || decodedDescription || "",
     });
 
     // ────────────────────────────────────────────────

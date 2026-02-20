@@ -44,19 +44,19 @@ export async function POST(req) {
 
       if (!existingUser) {
         // Create new client user if not exists
-        const tempPassword = Math.random().toString(36).slice(-8); // Random temp password
+        // const tempPassword = Math.random().toString(36).slice(-8); // Random temp password
         // In real app, we'd enable the "invite" flow properly, but here we just create user
         // to satisfy the foreign key constraint.
-        existingUser = await User.create({
-          email,
-          name: name || email.split("@")[0],
-          role: "client",
-          password: "temp_password_placeholder", // Should hash this if we use it, strictly.
-          // But since they need to register, maybe we mark them as 'pending_invite' status if we had that field.
-          // For now, let's just creating them is enough to link.
-          phone: phone,
-        });
-        const inviteToken = signToken({ name, email, role: "client" });
+        // existingUser = await User.create({
+        //   email,
+        //   name: name || email.split("@")[0],
+        //   role: "client",
+        //   password: "temp_password_placeholder", // Should hash this if we use it, strictly.
+        //   // But since they need to register, maybe we mark them as 'pending_invite' status if we had that field.
+        //   // For now, let's just creating them is enough to link.
+        //   phone: phone,
+        // });
+        const inviteToken = signToken({ name, email, phone, role: "client" });
         const registrationLink = `${process.env.NEXT_PUBLIC_API_URL}/register?token=${inviteToken}`;
         if (process.env.EMAIL_USER) {
           await sendEmail({
@@ -66,7 +66,32 @@ export async function POST(req) {
           });
         }
       }
-      clientId = existingUser._id;
+      else {
+  clientId = existingUser._id;
+
+  const { title } = projectData;
+
+const siteUrl = process.env.NEXT_PUBLIC_API_URL;
+
+if (process.env.EMAIL_USER) {
+  await sendEmail({
+    to: email,
+    subject: "You have been assigned a new project",
+    html: `
+      <p>Hello ${name || "User"},</p>
+      <p>You have been assigned a new project in Contractor CMS.</p>
+      <p><strong>Project Title:</strong> ${title}</p>
+      <p>
+        <a href="${siteUrl}" 
+           style="display:inline-block;padding:10px 15px;background:#000;color:#fff;text-decoration:none;border-radius:5px;">
+           View Dashboard
+        </a>
+      </p>
+    `,
+  });
+}
+}
+      
     }
 
     const newProject = await Project.create({
