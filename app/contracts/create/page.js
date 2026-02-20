@@ -23,7 +23,7 @@ export default function CreateContractPage() {
     clientName: "", // For now text, ideally should be a dropdown of existing clients
     clientEmail: "",
     clientPhone: "",
-    clientDescription: "", // Project description mainly
+    description: "", // Project description mainly
     serviceType: "",
     startDate: "",
     dueDate: "",
@@ -75,7 +75,7 @@ export default function CreateContractPage() {
         body: JSON.stringify({
           title: formData.title,
           scopeOfWork: formData.scopeOfWork,
-          description: formData.clientDescription,
+          description: formData.ProjectDescription,
           serviceType: formData.serviceType,
           startDate: formData.startDate,
           dueDate: formData.dueDate,
@@ -87,6 +87,7 @@ export default function CreateContractPage() {
             name: formData.clientName,
             email: formData.clientEmail,
             phone: formData.clientPhone,
+            // description: formData.clientDescription
           },
         }),
       });
@@ -192,6 +193,13 @@ export default function CreateContractPage() {
                 className="w-full border p-2 rounded h-24"
               />
             </div> */}
+                        <TextField
+              label="Project Description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              type="textarea"
+            />
             <TextField
               label="Scope of Work"
               name="scopeOfWork"
@@ -199,6 +207,7 @@ export default function CreateContractPage() {
               onChange={handleChange}
               type="textarea"
             />
+
           </div>
         </div>
 
