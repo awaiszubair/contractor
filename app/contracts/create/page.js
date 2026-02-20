@@ -75,7 +75,7 @@ export default function CreateContractPage() {
         body: JSON.stringify({
           title: formData.title,
           scopeOfWork: formData.scopeOfWork,
-          description: formData.ProjectDescription,
+          description: formData.description,
           serviceType: formData.serviceType,
           startDate: formData.startDate,
           dueDate: formData.dueDate,
