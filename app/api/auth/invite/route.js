@@ -138,7 +138,8 @@ export async function POST(req) {
   } catch (error) {
     console.error("Invite error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      // { error: "Internal server error" },
+      { error: error.message },
       { status: 500 },
     );
   }
