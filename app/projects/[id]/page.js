@@ -1048,14 +1048,14 @@ export default function ProjectDetailsPage() {
           </div>
 
           {/* Chat Link */}
-          <div className="bg-black text-white p-4 rounded text-center">
+          {/* <div className="bg-black text-white p-4 rounded text-center">
             <Link
               href={`/messages/${project._id}`}
               className="block w-full font-bold hover:underline"
             >
               Open Project Chat
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
 

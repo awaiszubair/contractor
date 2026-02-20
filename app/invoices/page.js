@@ -89,7 +89,7 @@ export default function InvoicesPage() {
     <div className="max-w-7xl mx-auto">
       <DashboardNav role={user.role} />
 
-      {user.role !== "client" && (
+      {user.role !== "contractor" && (
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Invoices</h1>
           <button
