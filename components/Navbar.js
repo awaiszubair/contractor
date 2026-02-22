@@ -11,7 +11,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="max-w-7xl mx-auto w-full flex justify-between items-center p-4 bg-[#F0F0F0]">
+    <nav className="max-w-7xl relative mx-auto w-full flex justify-between items-center p-4 bg-[#F0F0F0]">
       {/* Left: Logo */}
       <div className="text-xl font-bold">
         <Link href="/">
@@ -67,12 +67,12 @@ export default function Navbar() {
           >
             Dashboard
           </Link>
-          <Link
+          {/* <Link
             href="/profile"
             className="block px-4 py-2 hover:bg-gray-50 rounded"
           >
             Profile
-          </Link>
+          </Link> */}
           <button
             onClick={() => {
               // Your extra actions here

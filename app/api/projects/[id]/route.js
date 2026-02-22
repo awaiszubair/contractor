@@ -115,6 +115,65 @@ export async function PUT(req, { params }) {
       });
     }
 
+    // ── NEW: Assign Client ──
+    if (body.assignClientEmail) {
+      const client = await User.findOne({
+        email: body.assignClientEmail,
+        role: "client",
+      });
+      if (!client) {
+        return NextResponse.json(
+          { error: "Client not found with that email" },
+          { status: 404 },
+        );
+      }
+
+      // Client is singular → replace (not add multiple)
+      project.client = client._id;
+      await project.save();
+
+      const populated = await Project.findById(id)
+        .populate("client", "name email phone avatar")
+        .populate("assignedContractors", "name email phone avatar");
+
+      return NextResponse.json({
+        message: "Client assigned",
+        project: populated,
+      });
+    }
+
+    // ── NEW: Remove Client ──
+    if (body.removeClientEmail) {
+      const client = await User.findOne({
+        email: body.removeClientEmail,
+        role: "client",
+      });
+      if (!client) {
+        return NextResponse.json(
+          { error: "Client not found" },
+          { status: 404 },
+        );
+      }
+
+      if (project.client?.toString() === client._id.toString()) {
+        project.client = null;
+        await project.save();
+
+        const populated = await Project.findById(id)
+          .populate("client", "name email phone avatar")
+          .populate("assignedContractors", "name email phone avatar");
+
+        return NextResponse.json({
+          message: "Client removed",
+          project: populated,
+        });
+      }
+
+      return NextResponse.json({
+        message: "Client was not assigned to this project",
+      });
+    }
+
     // General Update
     const updatedProject = await Project.findByIdAndUpdate(id, body, {
       new: true,

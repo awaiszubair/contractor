@@ -11,11 +11,17 @@ const InvoiceSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    receiver: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true, // Only Admin can receive from Client, Contractor receives from Admin (technically) or Admin checks them
-    },
+    // receiver: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'User',
+    //     required: true, // Only Admin can receive from Client, Contractor receives from Admin (technically) or Admin checks them
+    // },
+     receiver: [  // ✅ Array mein badal do
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }
+    ],
     fileUrl: {
         type: String,
         required: true,

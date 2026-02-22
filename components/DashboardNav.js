@@ -27,7 +27,8 @@ export default function DashboardNav({ role }) {
   return (
     <div className="flex flex-wrap gap-2 mb-8 bg-[#F0F0F0]">
       {links.map((link) => {
-        const isActive = pathname === link.href;
+        const isActive =
+          pathname === link.href || pathname.startsWith(link.href + "/");
         return (
           <Link
             key={link.name}
